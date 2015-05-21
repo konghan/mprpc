@@ -32,8 +32,8 @@ extern int mprpc_add(mprpc_t *m, const char *name, mprpc_service_t *svc);
 extern int mprpc_del(mprpc_t *m, const char *name, mprpc_service_t **svc);
 
 /*
-**
-*/
+ *
+ */
 
 struct mprpc_clt;
 typedef struct mprpc_clt mprpc_clt_t;
