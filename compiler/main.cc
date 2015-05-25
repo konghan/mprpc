@@ -118,7 +118,7 @@ vector<string> g_incl_searchpath;
 /**
  * Global debug state
  */
-int g_debug = 0;
+int g_debug = 1;
 
 /**
  * Strictness level
@@ -133,7 +133,7 @@ int g_warn = 1;
 /**
  * Verbose output
  */
-int g_verbose = 0;
+int g_verbose = 1;
 
 /**
  * Global time string
@@ -672,7 +672,7 @@ void generate_all_fingerprints(t_program* program) {
 void check_for_list_of_bytes(t_type* list_elem_type) {
   if((g_parse_mode == PROGRAM) && (list_elem_type != NULL) && list_elem_type->is_base_type()) {
     t_base_type* tbase = (t_base_type*)list_elem_type;
-    if(tbase->get_base() == t_base_type::TYPE_BYTE) {
+    if(tbase->get_base() == t_base_type::TYPE_I8) {
       pwarning(1,"Consider using the more efficient \"binary\" type instead of \"list<byte>\".");
     }
   }
@@ -756,7 +756,7 @@ void validate_const_rec(std::string name, t_type* type, t_const_value* value) {
         throw "type error: const \"" + name + "\" was declared as string";
       }
       break;
-    case t_base_type::TYPE_BOOL:
+/*   case t_base_type::TYPE_I8:
       if (value->get_type() != t_const_value::CV_INTEGER) {
         throw "type error: const \"" + name + "\" was declared as bool";
       }
@@ -766,7 +766,7 @@ void validate_const_rec(std::string name, t_type* type, t_const_value* value) {
         throw "type error: const \"" + name + "\" was declared as byte";
       }
       break;
-    case t_base_type::TYPE_I16:
+*/    case t_base_type::TYPE_I16:
       if (value->get_type() != t_const_value::CV_INTEGER) {
         throw "type error: const \"" + name + "\" was declared as i16";
       }
@@ -847,7 +847,7 @@ void validate_const_rec(std::string name, t_type* type, t_const_value* value) {
       validate_const_rec(name + "<key>", k_type, v_iter->first);
       validate_const_rec(name + "<val>", v_type, v_iter->second);
     }
-  } else if (type->is_list() || type->is_set()) {
+  }/* else if (type->is_list() || type->is_set()) {
     t_type* e_type;
     if (type->is_list()) {
       e_type = ((t_list*)type)->get_elem_type();
@@ -859,7 +859,7 @@ void validate_const_rec(std::string name, t_type* type, t_const_value* value) {
     for (v_iter = val.begin(); v_iter != val.end(); ++v_iter) {
       validate_const_rec(name + "<elem>", e_type, *v_iter);
     }
-  }
+  }*/
 }
 
 /**
@@ -1192,13 +1192,16 @@ int main(int argc, char** argv) {
   g_type_string = new t_base_type("string", t_base_type::TYPE_STRING);
   g_type_binary = new t_base_type("string", t_base_type::TYPE_STRING);
   ((t_base_type*)g_type_binary)->set_binary(true);
-  g_type_slist  = new t_base_type("string", t_base_type::TYPE_STRING);
-  ((t_base_type*)g_type_slist)->set_string_list(true);
   g_type_bool   = new t_base_type("bool",   t_base_type::TYPE_BOOL);
-  g_type_byte   = new t_base_type("byte",   t_base_type::TYPE_BYTE);
+  g_type_i8   = new t_base_type("i8",   t_base_type::TYPE_I8);
+  g_type_u8   = new t_base_type("u8",   t_base_type::TYPE_U8);
   g_type_i16    = new t_base_type("i16",    t_base_type::TYPE_I16);
+  g_type_u16   = new t_base_type("u16",   t_base_type::TYPE_U16);
   g_type_i32    = new t_base_type("i32",    t_base_type::TYPE_I32);
+  g_type_u32   = new t_base_type("u32",   t_base_type::TYPE_U32);
   g_type_i64    = new t_base_type("i64",    t_base_type::TYPE_I64);
+  g_type_u64   = new t_base_type("u64",   t_base_type::TYPE_U64);
+  g_type_float   = new t_base_type("float",   t_base_type::TYPE_FLOAT);
   g_type_double = new t_base_type("double", t_base_type::TYPE_DOUBLE);
 
   // Parse it!
@@ -1222,7 +1225,7 @@ int main(int argc, char** argv) {
   delete g_type_void;
   delete g_type_string;
   delete g_type_bool;
-  delete g_type_byte;
+  delete g_type_i8;
   delete g_type_i16;
   delete g_type_i32;
   delete g_type_i64;
