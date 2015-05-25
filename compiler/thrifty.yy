@@ -37,6 +37,7 @@
 #ifdef _MSC_VER
 #include "windows/config.h"
 #endif
+
 #include "main.h"
 #include "globals.h"
 #include "parse/t_program.h"
@@ -84,6 +85,7 @@ const int struct_is_union = 1;
   t_const*       tconst;
   t_const_value* tconstv;
   t_struct*      tstruct;
+  t_topic*       ttopic;
   t_service*     tservice;
   t_function*    tfunction;
   t_field*       tfield;
@@ -136,22 +138,25 @@ const int struct_is_union = 1;
  */
 %token tok_void
 %token tok_bool
-%token tok_byte
+%token tok_nil      "nil"
+%token tok_i8
+%token tok_u8
+%token tok_i16
+%token tok_u16
+%token tok_i32
+%token tok_u32
+%token tok_i64
+%token tok_u64
 %token tok_string
 %token tok_binary
-%token tok_slist
-%token tok_senum
-%token tok_i16
-%token tok_i32
-%token tok_i64
+%token tok_float
 %token tok_double
 
 /**
  * Complex type keywords
  */
 %token tok_map
-%token tok_list
-%token tok_set
+%token tok_array
 
 /**
  * Function modifiers
@@ -167,6 +172,7 @@ const int struct_is_union = 1;
 %token tok_throws
 %token tok_extends
 %token tok_service
+%token tok_topic
 %token tok_enum
 %token tok_const
 %token tok_required
@@ -183,8 +189,7 @@ const int struct_is_union = 1;
 %type<ttype>     ContainerType
 %type<ttype>     SimpleContainerType
 %type<ttype>     MapType
-%type<ttype>     SetType
-%type<ttype>     ListType
+%type<ttype>     ArrayType
 
 %type<tdoc>      Definition
 %type<ttype>     TypeDefinition
@@ -201,17 +206,14 @@ const int struct_is_union = 1;
 %type<ereq>      FieldRequiredness
 %type<ttype>     FieldType
 %type<tconstv>   FieldValue
-%type<tstruct>   FieldList
+%type<tstruct>   StructFieldList
+%type<ttopic>    TopicFieldList
 %type<tbool>     FieldReference
 
 %type<tenum>     Enum
 %type<tenum>     EnumDefList
 %type<tenumv>    EnumDef
 %type<tenumv>    EnumValue
-
-%type<ttypedef>  Senum
-%type<tbase>     SenumDefList
-%type<id>        SenumDef
 
 %type<tconst>    Const
 %type<tconstv>   ConstValue
@@ -224,6 +226,8 @@ const int struct_is_union = 1;
 %type<tstruct>   Struct
 %type<tstruct>   Xception
 %type<tservice>  Service
+
+%type<ttopic>    Topic
 
 %type<tfunction> Function
 %type<ttype>     FunctionType
@@ -313,16 +317,6 @@ Header:
         g_program->set_namespace("*", $3);
       }
     }
-/* TODO(dreiss): Get rid of this once everyone is using the new hotness. */
-| tok_cpp_namespace tok_identifier
-    {
-      pwarning(1, "'cpp_namespace' is deprecated. Use 'namespace cpp' instead");
-      pdebug("Header -> tok_cpp_namespace tok_identifier");
-      declare_valid_program_doctext();  
-      if (g_parse_mode == PROGRAM) {
-        g_program->set_namespace("cpp", $2);
-      }
-    }
 | tok_cpp_include tok_literal
     {
       pdebug("Header -> tok_cpp_include tok_literal");
@@ -331,115 +325,7 @@ Header:
         g_program->add_cpp_include($2);
       }
     }
-| tok_php_namespace tok_identifier
-    {
-      pwarning(1, "'php_namespace' is deprecated. Use 'namespace php' instead");
-      pdebug("Header -> tok_php_namespace tok_identifier");
-      declare_valid_program_doctext();  
-      if (g_parse_mode == PROGRAM) {
-        g_program->set_namespace("php", $2);
-      }
-    }
-/* TODO(dreiss): Get rid of this once everyone is using the new hotness. */
-| tok_py_module tok_identifier
-    {
-      pwarning(1, "'py_module' is deprecated. Use 'namespace py' instead");
-      pdebug("Header -> tok_py_module tok_identifier");
-      declare_valid_program_doctext();  
-      if (g_parse_mode == PROGRAM) {
-        g_program->set_namespace("py", $2);
-      }
-    }
-/* TODO(dreiss): Get rid of this once everyone is using the new hotness. */
-| tok_perl_package tok_identifier
-    {
-      pwarning(1, "'perl_package' is deprecated. Use 'namespace perl' instead");
-      pdebug("Header -> tok_perl_namespace tok_identifier");
-      declare_valid_program_doctext();  
-      if (g_parse_mode == PROGRAM) {
-        g_program->set_namespace("perl", $2);
-      }
-    }
-/* TODO(dreiss): Get rid of this once everyone is using the new hotness. */
-| tok_ruby_namespace tok_identifier
-    {
-      pwarning(1, "'ruby_namespace' is deprecated. Use 'namespace rb' instead");
-      pdebug("Header -> tok_ruby_namespace tok_identifier");
-      declare_valid_program_doctext();  
-      if (g_parse_mode == PROGRAM) {
-        g_program->set_namespace("rb", $2);
-      }
-    }
-/* TODO(dreiss): Get rid of this once everyone is using the new hotness. */
-| tok_smalltalk_category tok_st_identifier
-    {
-      pwarning(1, "'smalltalk_category' is deprecated. Use 'namespace smalltalk.category' instead");
-      pdebug("Header -> tok_smalltalk_category tok_st_identifier");
-      declare_valid_program_doctext();  
-      if (g_parse_mode == PROGRAM) {
-        g_program->set_namespace("smalltalk.category", $2);
-      }
-    }
-/* TODO(dreiss): Get rid of this once everyone is using the new hotness. */
-| tok_smalltalk_prefix tok_identifier
-    {
-      pwarning(1, "'smalltalk_prefix' is deprecated. Use 'namespace smalltalk.prefix' instead");
-      pdebug("Header -> tok_smalltalk_prefix tok_identifier");
-      declare_valid_program_doctext();  
-      if (g_parse_mode == PROGRAM) {
-        g_program->set_namespace("smalltalk.prefix", $2);
-      }
-    }
-/* TODO(dreiss): Get rid of this once everyone is using the new hotness. */
-| tok_java_package tok_identifier
-    {
-      pwarning(1, "'java_package' is deprecated. Use 'namespace java' instead");
-      pdebug("Header -> tok_java_package tok_identifier");
-      declare_valid_program_doctext();  
-      if (g_parse_mode == PROGRAM) {
-        g_program->set_namespace("java", $2);
-      }
-    }
-/* TODO(dreiss): Get rid of this once everyone is using the new hotness. */
-| tok_cocoa_prefix tok_identifier
-    {
-      pwarning(1, "'cocoa_prefix' is deprecated. Use 'namespace cocoa' instead");
-      pdebug("Header -> tok_cocoa_prefix tok_identifier");
-      declare_valid_program_doctext();  
-      if (g_parse_mode == PROGRAM) {
-        g_program->set_namespace("cocoa", $2);
-      }
-    }
-/* TODO(dreiss): Get rid of this once everyone is using the new hotness. */
-| tok_xsd_namespace tok_literal
-    {
-      pwarning(1, "'xsd_namespace' is deprecated. Use 'namespace xsd' instead");
-      pdebug("Header -> tok_xsd_namespace tok_literal");
-      declare_valid_program_doctext();  
-      if (g_parse_mode == PROGRAM) {
-        g_program->set_namespace("cocoa", $2);
-      }
-    }
-/* TODO(dreiss): Get rid of this once everyone is using the new hotness. */
-| tok_csharp_namespace tok_identifier
-   {
-     pwarning(1, "'csharp_namespace' is deprecated. Use 'namespace csharp' instead");
-     pdebug("Header -> tok_csharp_namespace tok_identifier");
-     declare_valid_program_doctext();  
-     if (g_parse_mode == PROGRAM) {
-       g_program->set_namespace("csharp", $2);
-     }
-   }
-/* TODO(dreiss): Get rid of this once everyone is using the new hotness. */
-| tok_delphi_namespace tok_identifier
-   {
-     pwarning(1, "'delphi_namespace' is deprecated. Use 'namespace delphi' instead");
-     pdebug("Header -> tok_delphi_namespace tok_identifier");
-     declare_valid_program_doctext();  
-     if (g_parse_mode == PROGRAM) {
-       g_program->set_namespace("delphi", $2);
-     }
-   }
+
 
 Include:
   tok_include tok_literal
@@ -507,6 +393,22 @@ Definition:
       }
       $$ = $1;
     }
+| Topic
+    {
+      pdebug("Definition -> Topic");
+      if (g_parse_mode == PROGRAM) {
+        g_scope->add_topic($1->get_name(), $1);
+        if (g_parent_scope != NULL) {
+          g_parent_scope->add_topic(g_parent_prefix + $1->get_name(), $1);
+        }
+        g_program->add_topic($1);
+        if (! g_program->is_unique_typename($1)) {
+          yyerror("Type \"%s\" is already defined.", $1->get_name().c_str());
+          exit(1);
+        }
+      }
+      $$ = $1;
+    }
 
 TypeDefinition:
   Typedef
@@ -521,13 +423,6 @@ TypeDefinition:
       pdebug("TypeDefinition -> Enum");
       if (g_parse_mode == PROGRAM) {
         g_program->add_enum($1);
-      }
-    }
-| Senum
-    {
-      pdebug("TypeDefinition -> Senum");
-      if (g_parse_mode == PROGRAM) {
-        g_program->add_typedef($1);
       }
     }
 | Struct
@@ -649,39 +544,6 @@ EnumValue:
       $$ = new t_enum_value($1, y_enum_val);
     }
 
-Senum:
-  tok_senum tok_identifier '{' SenumDefList '}' TypeAnnotations
-    {
-      pdebug("Senum -> tok_senum tok_identifier { SenumDefList }");
-      validate_simple_identifier( $2);
-      $$ = new t_typedef(g_program, $4, $2);
-      if ($6 != NULL) {
-        $$->annotations_ = $6->annotations_;
-        delete $6;
-      }
-    }
-
-SenumDefList:
-  SenumDefList SenumDef
-    {
-      pdebug("SenumDefList -> SenumDefList SenumDef");
-      $$ = $1;
-      $$->add_string_enum_val($2);
-    }
-|
-    {
-      pdebug("SenumDefList -> ");
-      $$ = new t_base_type("string", t_base_type::TYPE_STRING);
-      $$->set_string_enum(true);
-    }
-
-SenumDef:
-  tok_literal CommaOrSemicolonOptional
-    {
-      pdebug("SenumDef -> tok_literal");
-      $$ = $1;
-    }
-
 Const:
   tok_const FieldType tok_identifier '=' ConstValue CommaOrSemicolonOptional
     {
@@ -751,13 +613,13 @@ ConstListContents:
     {
       pdebug("ConstListContents => ConstListContents ConstValue CommaOrSemicolonOptional");
       $$ = $1;
-      $$->add_list($2);
+      $$->add_array($2);
     }
 |
     {
       pdebug("ConstListContents =>");
       $$ = new t_const_value();
-      $$->set_list();
+      $$->set_array();
     }
 
 ConstMap:
@@ -792,9 +654,9 @@ StructHead:
     }
 
 Struct:
-  StructHead tok_identifier XsdAll '{' FieldList '}' TypeAnnotations
+  StructHead tok_identifier XsdAll '{' StructFieldList '}' TypeAnnotations
     {
-      pdebug("Struct -> tok_struct tok_identifier { FieldList }");
+      pdebug("Struct -> tok_struct tok_identifier { StructFieldList }");
       validate_simple_identifier( $2);
       $5->set_xsd_all($3);
       $5->set_union($1 == struct_is_union);
@@ -803,6 +665,20 @@ Struct:
       if ($7 != NULL) {
         $$->annotations_ = $7->annotations_;
         delete $7;
+      }
+    }
+
+
+Topic:
+  tok_topic tok_identifier '{' TopicFieldList '}' TypeAnnotations
+    {
+      pdebug("Topic -> tok_topic tok_identifier { TopicFieldList }");
+      validate_simple_identifier( $2);
+      $$ = $4;
+      $$->set_name($2);
+      if ($6 != NULL) {
+        $$->annotations_ = $6->annotations_;
+        delete $6;
       }
     }
 
@@ -837,7 +713,7 @@ XsdNillable:
     }
 
 XsdAttributes:
-  tok_xsd_attrs '{' FieldList '}'
+  tok_xsd_attrs '{' StructFieldList '}'
     {
       $$ = $3;
     }
@@ -847,9 +723,9 @@ XsdAttributes:
     }
 
 Xception:
-  tok_xception tok_identifier '{' FieldList '}' TypeAnnotations
+  tok_xception tok_identifier '{' StructFieldList '}' TypeAnnotations
     {
-      pdebug("Xception -> tok_xception tok_identifier { FieldList }");
+      pdebug("Xception -> tok_xception tok_identifier { StructFieldList }");
       validate_simple_identifier( $2);
       $4->set_name($2);
       $4->set_xception(true);
@@ -916,7 +792,7 @@ FunctionList:
     }
 
 Function:
-  CaptureDocText Oneway FunctionType tok_identifier '(' FieldList ')' Throws TypeAnnotations CommaOrSemicolonOptional
+  CaptureDocText Oneway FunctionType tok_identifier '(' StructFieldList ')' Throws TypeAnnotations CommaOrSemicolonOptional
     {
       validate_simple_identifier( $4);
       $6->set_name(std::string($4) + "_args");
@@ -941,9 +817,9 @@ Oneway:
     }
 
 Throws:
-  tok_throws '(' FieldList ')'
+  tok_throws '(' StructFieldList ')'
     {
-      pdebug("Throws -> tok_throws ( FieldList )");
+      pdebug("Throws -> tok_throws ( StructFieldList )");
       $$ = $3;
       if (g_parse_mode == PROGRAM && !validate_throws($$)) {
         yyerror("Throws clause may not contain non-exception types");
@@ -955,10 +831,11 @@ Throws:
       $$ = new t_struct(g_program);
     }
 
-FieldList:
-  FieldList Field
+
+StructFieldList:
+  StructFieldList Field
     {
-      pdebug("FieldList -> FieldList , Field");
+      pdebug("StructFieldList -> StructFieldList , Field");
       $$ = $1;
       if (!($$->append($2))) {
         yyerror("\"%d: %s\" - field identifier/name has already been used", $2->get_key(), $2->get_name().c_str());
@@ -967,10 +844,29 @@ FieldList:
     }
 |
     {
-      pdebug("FieldList -> ");
+      pdebug("StructFieldList -> ");
       y_field_val = -1;
       $$ = new t_struct(g_program);
     }
+
+
+TopicFieldList:
+  TopicFieldList Field
+    {
+      pdebug("TopicFieldList -> TopicFieldList , Field");
+      $$ = $1;
+      if (!($$->append($2))) {
+        yyerror("\"%d: %s\" - field identifier/name has already been used", $2->get_key(), $2->get_name().c_str());
+        exit(1);
+      }
+    }
+|
+    {
+      pdebug("TopicFieldList -> ");
+      y_field_val = -1;
+      $$ = new t_topic(g_program);
+    }
+
 
 Field:
   CaptureDocText FieldIdentifier FieldRequiredness FieldType FieldReference tok_identifier FieldValue XsdOptional XsdNillable XsdAttributes TypeAnnotations CommaOrSemicolonOptional
@@ -1026,7 +922,7 @@ FieldIdentifier:
           }
           /*
            * Leave $1 as-is, and update y_field_val to be one less than $1.
-           * The FieldList parsing will catch any duplicate key values.
+           * The StructFieldList parsing will catch any duplicate key values.
            */
           y_field_val = static_cast<int32_t>($1 - 1);
           $$.value = static_cast<int32_t>($1);
@@ -1159,24 +1055,29 @@ SimpleBaseType:
       pdebug("BaseType -> tok_binary");
       $$ = g_type_binary;
     }
-| tok_slist
-    {
-      pdebug("BaseType -> tok_slist");
-      $$ = g_type_slist;
-    }
 | tok_bool
     {
       pdebug("BaseType -> tok_bool");
       $$ = g_type_bool;
     }
-| tok_byte
+| tok_i8
     {
-      pdebug("BaseType -> tok_byte");
-      $$ = g_type_byte;
+      pdebug("BaseType -> tok_i8");
+      $$ = g_type_i8;
+    }
+| tok_u8
+    {
+      pdebug("BaseType -> tok_u8");
+      $$ = g_type_u8;
     }
 | tok_i16
     {
       pdebug("BaseType -> tok_i16");
+      $$ = g_type_i16;
+    }
+| tok_u16
+    {
+      pdebug("BaseType -> tok_u16");
       $$ = g_type_i16;
     }
 | tok_i32
@@ -1184,10 +1085,25 @@ SimpleBaseType:
       pdebug("BaseType -> tok_i32");
       $$ = g_type_i32;
     }
+| tok_u32
+    {
+      pdebug("BaseType -> tok_u32");
+      $$ = g_type_u32;
+    }
 | tok_i64
     {
       pdebug("BaseType -> tok_i64");
       $$ = g_type_i64;
+    }
+| tok_u64
+    {
+      pdebug("BaseType -> tok_u64");
+      $$ = g_type_u64;
+    }
+| tok_float
+    {
+      pdebug("BaseType -> tok_float");
+      $$ = g_type_float;
     }
 | tok_double
     {
@@ -1211,14 +1127,9 @@ SimpleContainerType:
       pdebug("SimpleContainerType -> MapType");
       $$ = $1;
     }
-| SetType
+| ArrayType
     {
-      pdebug("SimpleContainerType -> SetType");
-      $$ = $1;
-    }
-| ListType
-    {
-      pdebug("SimpleContainerType -> ListType");
+      pdebug("SimpleContainerType -> ArrayType");
       $$ = $1;
     }
 
@@ -1232,26 +1143,16 @@ MapType:
       }
     }
 
-SetType:
-  tok_set CppType '<' FieldType '>'
+ArrayType:
+  tok_array CppType '<' FieldType '>'
     {
-      pdebug("SetType -> tok_set<FieldType>");
-      $$ = new t_set($4);
+      pdebug("SetType -> tok_array<FieldType>");
+      $$ = new t_array($4);
       if ($2 != NULL) {
         ((t_container*)$$)->set_cpp_name(std::string($2));
       }
     }
 
-ListType:
-  tok_list '<' FieldType '>' CppType
-    {
-      pdebug("ListType -> tok_list<FieldType>");
-      check_for_list_of_bytes($3);
-      $$ = new t_list($3);
-      if ($5 != NULL) {
-        ((t_container*)$$)->set_cpp_name(std::string($5));
-      }
-    }
 
 CppType:
   tok_cpp_type tok_literal

@@ -68,12 +68,16 @@ t_program* g_program;
 t_type* g_type_void;
 t_type* g_type_string;
 t_type* g_type_binary;
-t_type* g_type_slist;
 t_type* g_type_bool;
-t_type* g_type_byte;
+t_type* g_type_i8;
+t_type* g_type_u8;
 t_type* g_type_i16;
+t_type* g_type_u16;
 t_type* g_type_i32;
+t_type* g_type_u32;
 t_type* g_type_i64;
+t_type* g_type_u64;
+t_type* g_type_float;
 t_type* g_type_double;
 
 /**

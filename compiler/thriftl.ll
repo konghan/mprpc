@@ -153,24 +153,23 @@ literal_begin (['\"])
 "include"            { return tok_include;              }
 "void"               { return tok_void;                 }
 "bool"               { return tok_bool;                 }
-"byte"               { return tok_byte;                 }
+"nil"                { return tok_nil;                  }
+"i8"                 { return tok_i8;                   }
+"u8"                 { return tok_u8;                  }
 "i16"                { return tok_i16;                  }
+"u16"                { return tok_u16;                  }
 "i32"                { return tok_i32;                  }
+"u32"                { return tok_u32;                 }
 "i64"                { return tok_i64;                  }
+"u64"                { return tok_u64;                 }
+"float"              { return tok_float;                }
 "double"             { return tok_double;               }
 "string"             { return tok_string;               }
 "binary"             { return tok_binary;               }
-"slist" {
-  pwarning(0, "\"slist\" is deprecated and will be removed in a future compiler version.  This type should be replaced with \"string\".\n");
-  return tok_slist;
-}
-"senum" {
-  pwarning(0, "\"senum\" is deprecated and will be removed in a future compiler version.  This type should be replaced with \"string\".\n");
-  return tok_senum;
-}
+
 "map"                { return tok_map;                  }
-"list"               { return tok_list;                 }
-"set"                { return tok_set;                  }
+"array"              { return tok_array;                }
+
 "oneway"             { return tok_oneway;               }
 "typedef"            { return tok_typedef;              }
 "struct"             { return tok_struct;               }
@@ -179,14 +178,12 @@ literal_begin (['\"])
 "extends"            { return tok_extends;              }
 "throws"             { return tok_throws;               }
 "service"            { return tok_service;              }
+"topic"              { return tok_topic;                }
 "enum"               { return tok_enum;                 }
 "const"              { return tok_const;                }
 "required"           { return tok_required;             }
 "optional"           { return tok_optional;             }
-"async" {
-  pwarning(0, "\"async\" is deprecated.  It is called \"oneway\" now.\n");
-  return tok_oneway;
-}
+
 "&"                  { return tok_reference;            }
 
 

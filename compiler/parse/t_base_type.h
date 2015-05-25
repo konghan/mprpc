@@ -35,12 +35,18 @@ class t_base_type : public t_type {
    */
   enum t_base {
     TYPE_VOID,
+    TYPE_NIL,
     TYPE_STRING,
     TYPE_BOOL,
-    TYPE_BYTE,
+    TYPE_I8,
+    TYPE_U8,
     TYPE_I16,
+    TYPE_U16,
     TYPE_I32,
+    TYPE_U32,
     TYPE_I64,
+    TYPE_U64,
+    TYPE_FLOAT,
     TYPE_DOUBLE
   };
 
@@ -116,10 +122,15 @@ class t_base_type : public t_type {
       case TYPE_VOID   : return      "void"; break;
       case TYPE_STRING : return    "string"; break;
       case TYPE_BOOL   : return      "bool"; break;
-      case TYPE_BYTE   : return      "byte"; break;
+      case TYPE_I8     : return        "i8"; break;
+      case TYPE_U8     : return        "u8"; break;
       case TYPE_I16    : return       "i16"; break;
+      case TYPE_U16    : return       "u16"; break;
       case TYPE_I32    : return       "i32"; break;
+      case TYPE_U32    : return       "u32"; break;
       case TYPE_I64    : return       "i64"; break;
+      case TYPE_U64    : return       "u64"; break;
+      case TYPE_FLOAT  : return     "float"; break;
       case TYPE_DOUBLE : return    "double"; break;
       default          : return "(unknown)"; break;
     }

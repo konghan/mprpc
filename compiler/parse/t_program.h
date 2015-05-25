@@ -34,10 +34,10 @@
 #include "t_enum.h"
 #include "t_const.h"
 #include "t_struct.h"
+#include "t_topic.h"
 #include "t_service.h"
-#include "t_list.h"
+#include "t_array.h"
 #include "t_map.h"
-#include "t_set.h"
 #include "generate/t_generator_registry.h"
 //#include "t_doc.h"
 
@@ -50,6 +50,7 @@
  *   Constants
  *   Structs
  *   Exceptions
+ *   Topic
  *   Services
  *
  * The program module also contains the definitions of the base types.
@@ -107,6 +108,7 @@ class t_program : public t_doc {
   const std::vector<t_struct*>&  get_structs()   const { return structs_;   }
   const std::vector<t_struct*>&  get_xceptions() const { return xceptions_; }
   const std::vector<t_struct*>&  get_objects()   const { return objects_;   }
+  const std::vector<t_topic*>&   get_topic()     const { return topic_;     }
   const std::vector<t_service*>& get_services()  const { return services_;  }
 
   // Program elements
@@ -117,6 +119,7 @@ class t_program : public t_doc {
                                       structs_.push_back(ts);   }
   void add_xception (t_struct*  tx) { objects_.push_back(tx);
                                       xceptions_.push_back(tx); }
+  void add_topic    (t_topic*   tp) { topic_.push_back(tp);     }
   void add_service  (t_service* ts) { services_.push_back(ts);  }
 
   // Programs to include
@@ -365,7 +368,7 @@ class t_program : public t_doc {
   std::vector<t_struct*>  structs_;
   std::vector<t_struct*>  xceptions_;
   std::vector<t_service*> services_;
-
+  std::vector<t_topic*>   topic_;
   // Dynamic namespaces
   std::map<std::string, std::string> namespaces_;
 

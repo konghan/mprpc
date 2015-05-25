@@ -3,14 +3,14 @@
 ##base types:
 0. nil:
 1. bool: a boolean value
-2. int8_t: an 8-bit signed integer
-3. uint8_t: an 8-bit unsigned integer
-4. int16_t: a 16-bit signed integer
-5. uint16_t
-6. int32_t:
-7. uint32_t:
-8. int64_t:
-9. uint64_t:
+2. i8: an 8-bit signed integer
+3. u8: an 8-bit unsigned integer
+4. i16: a 16-bit signed integer
+5. u16
+6. i32:
+7. u32:
+8. i64:
+9. u64:
 10. float:
 11. double:
 12. string:
@@ -80,8 +80,7 @@
 37. Digit ::= ['0'-'9']
 
 ###Topic
-38. Topic ::= 'topic' Identifier '{' MsgField* '}'
-39. MsgField ::= FieldID FieldType ListSeparator
+38. Topic ::= 'topic' Identifier '{' Field* '}'
 
 
 

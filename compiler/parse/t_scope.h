@@ -26,11 +26,12 @@
 
 #include "t_type.h"
 #include "t_service.h"
+#include "t_topic.h"
 #include "t_const.h"
 #include "t_const_value.h"
 #include "t_base_type.h"
 #include "t_map.h"
-#include "t_list.h"
+#include "t_array.h"
 
 /**
  * This represents a variable scope used for looking up predefined types and
@@ -57,6 +58,14 @@ class t_scope {
 
   t_service* get_service(std::string name) {
     return services_[name];
+  }
+
+  void add_topic(std::string name, t_topic* topic) {
+    topic_[name] = topic;
+  }
+
+  t_topic* get_topic(std::string name) {
+    return topic_[name];
   }
 
   void add_constant(std::string name, t_const* constant) {
@@ -89,11 +98,11 @@ class t_scope {
         resolve_const_value(v_iter->first, ((t_map*)ttype)->get_key_type());
         resolve_const_value(v_iter->second, ((t_map*)ttype)->get_val_type());
       }
-    } else if (ttype->is_list() || ttype->is_set()) {
-      const std::vector<t_const_value*>& val = const_val->get_list();
+    } else if (ttype->is_array()) {
+      const std::vector<t_const_value*>& val = const_val->get_array();
       std::vector<t_const_value*>::const_iterator v_iter;
       for (v_iter = val.begin(); v_iter != val.end(); ++v_iter) {
-        resolve_const_value((*v_iter), ((t_list*)ttype)->get_elem_type());
+        resolve_const_value((*v_iter), ((t_array*)ttype)->get_elem_type());
       }
     } else if (ttype->is_struct()) {
       t_struct* tstruct = (t_struct*)ttype;
@@ -120,11 +129,15 @@ class t_scope {
 
         if (const_type->is_base_type()) {
           switch (((t_base_type*)const_type)->get_base()) {
+            case t_base_type::TYPE_I8:
+            case t_base_type::TYPE_U8:
             case t_base_type::TYPE_I16:
+            case t_base_type::TYPE_U16:
             case t_base_type::TYPE_I32:
+            case t_base_type::TYPE_U32:
             case t_base_type::TYPE_I64:
+            case t_base_type::TYPE_U64:
             case t_base_type::TYPE_BOOL:
-            case t_base_type::TYPE_BYTE:
               const_val->set_integer(constant->get_value()->get_integer());
               break;
             case t_base_type::TYPE_STRING:
@@ -144,13 +157,13 @@ class t_scope {
           for (v_iter = map.begin(); v_iter != map.end(); ++v_iter) {
             const_val->add_map(v_iter->first, v_iter->second);
           }
-        } else if (const_type->is_list()) {
-          const std::vector<t_const_value*>& val = constant->get_value()->get_list();
+        } else if (const_type->is_array()) {
+          const std::vector<t_const_value*>& val = constant->get_value()->get_array();
           std::vector<t_const_value*>::const_iterator v_iter;
 
-          const_val->set_list();
+          const_val->set_array();
           for (v_iter = val.begin(); v_iter != val.end(); ++v_iter) {
-            const_val->add_list(*v_iter);
+            const_val->add_array(*v_iter);
           }
         }
       }
@@ -179,6 +192,9 @@ class t_scope {
 
   // Map of names to services
   std::map<std::string, t_service*> services_;
+
+  // Map of names to services
+  std::map<std::string, t_topic*> topic_;
 
 };
 

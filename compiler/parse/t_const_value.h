@@ -39,7 +39,7 @@ class t_const_value {
     CV_DOUBLE,
     CV_STRING,
     CV_MAP,
-    CV_LIST,
+    CV_ARRAY,
     CV_IDENTIFIER
   };
 
@@ -110,15 +110,15 @@ class t_const_value {
     return mapVal_;
   }
 
-  void set_list() {
-    valType_ = CV_LIST;
+  void set_array() {
+    valType_ = CV_ARRAY;
   }
 
-  void add_list(t_const_value* val) {
+  void add_array(t_const_value* val) {
     listVal_.push_back(val);
   }
 
-  const std::vector<t_const_value*>& get_list() const {
+  const std::vector<t_const_value*>& get_array() const {
     return listVal_;
   }
 
