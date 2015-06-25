@@ -118,7 +118,7 @@ vector<string> g_incl_searchpath;
 /**
  * Global debug state
  */
-int g_debug = 1;
+int g_debug = 0;
 
 /**
  * Strictness level
@@ -128,12 +128,12 @@ int g_strict = 127;
 /**
  * Warning level
  */
-int g_warn = 1;
+int g_warn = 0;
 
 /**
  * Verbose output
  */
-int g_verbose = 1;
+int g_verbose = 0;
 
 /**
  * Global time string
