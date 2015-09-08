@@ -1,48 +1,38 @@
 
 
-#ifndef __SVRPC_H__
-#define __SVRPC_H__
+#ifndef __NEURPC_H__
+#define __NEURPC_H__
 
 #ifdef __cpluscplus
 extern "C" {
 #endif
 
-struct svrpc;
-typedef struct svrpc_t;
+struct neurpc_session;
+typedef struct neurpc_session neurpc_session_t;
 
-typedef int (*svrpc_cbfunc)(svrpc_t *m, const void *req, void **rsp);
+struct neurpc_loop;
+typedef struct neurpc_loop neurpc_loop_t;
 
-struct svrpc_callback{
-    int mc_idx;
-    svrpc_cbfunc mc_func;
+struct neurpc_service{
+    char *rpc_service;
+    void *rpc_inst;
+    neurpc_loop_t *rpc_loop;
+
+    int rpc_dispatch(neurpc_session_t *ses, neurpc_pdu_t *req, neurpc_pdu_t **rsp);
+    
+    int rpc_on_listen(void *inst);
+    int rpc_on_accepted(void *inst, neurpc_session_t *ses);
+    int rpc_on_closed(void *inst, neurpc_session_t *ses);
+    int rpc_on_shutdown(void *inst);
 };
+typedef struct neurpc_service neurpc_service_t;
 
-struct svrpc_service{
-    int ms_num;
-    struct svrpc_callback ms_cbs[];
-};
-typedef struct svrpc_service svrpc_service_t;
-
-extern int svrpc_create(svrpc_t **m);
-extern int svrpc_destroy(svrpc_t *m);
-
-extern int svrpc_loop(svrpc_t *m);
-
-extern int svrpc_add(svrpc_t *m, const char *name, svrpc_service_t *svc);
-extern int svrpc_del(svrpc_t *m, const char *name, svrpc_service_t **svc);
-
-/*
- *
- */
-
-struct svrpc_clt;
-typedef struct svrpc_clt svrpc_clt_t;
-extern int svrpc_clt_init(
-
+int neurpc_service_setup(neurpc_service_t *svc);
+int neurpc_service_close(neurpc_service_t *svc);
 
 #ifdef __cpluscplus
 }
 #endif
 
-#endif // __SVRPC_H__
+#endif // __NEURPC_H__
 
