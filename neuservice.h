@@ -16,7 +16,7 @@ int neuservice_fini(neuservice_t *ns);
 
 int neuservice_loop(neuloop_t *nl, neuservice_t *ns);
 
-int neuservice_add_neurpc(neuservice_t *ns, neurpc_t *rpc);
+int neuservice_regist_rpc(neuservice_t *ns, neurpc_t *rpc);
 int neuservice_add_neutopic(neuservice_t *ns, neutopic_t *topic);
 
 #ifdef __cpluscplus
