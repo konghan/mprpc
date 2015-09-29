@@ -1,12 +1,7 @@
 
-#include "svrpc.h"
-
+#include "neuron.h"
 
 int main(){
-    int ret;
-    svrpc_t *svrpc;
 
-    svrpc = svrpc_create();
-
-    
+    return 0;
 }
