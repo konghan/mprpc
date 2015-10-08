@@ -4,6 +4,8 @@
 
 #include "neuron.h"
 
+#include <string.h>
+
 #define DEFAULT_SERVICE_NUM         64
 
 int neuservice_init(neuservice_t *ns, struct sockaddr_in *addr, 

@@ -39,6 +39,8 @@ typedef struct neusession{
 neusession_t *neusession_new(struct neuservice *ns, evutil_socket_t sock);
 void neusession_free(neusession_t *ses);
 
+void neusession_free(neusession_t *ses);
+
 static inline void neusession_set_data(neusession_t *ns,  void *data){
     if(ns != NULL)    
         ns->data = data;

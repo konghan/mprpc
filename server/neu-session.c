@@ -3,6 +3,8 @@
 
 #include "neuron.h"
 
+#include <string.h>
+
 neusession_t *neusession_new(struct neuservice *ns, evutil_socket_t sock){
     neusession_t *ses;
 
@@ -17,6 +19,10 @@ neusession_t *neusession_new(struct neuservice *ns, evutil_socket_t sock){
     ses->sock = sock;
 
     return ses;
+}
+
+void neusession_free(neusession_t *ses){
+    xfree(ses);
 }
 
 static void neusession_close(neusession_t *ses, int errcode){
@@ -34,7 +40,7 @@ void neusession_event_cb(evutil_socket_t sock, short flags, void *data){
         while(1){
             ret = neupdu_recv(ses, &pdu);
             if(ret < 0){
-                neusession_close(ses, NEUERROR_PDUBROKEN);
+                neusession_close(ses, NEUERROR_PDUERR);
                 return ;
             }
 
@@ -50,8 +56,7 @@ void neusession_event_cb(evutil_socket_t sock, short flags, void *data){
                 break;
 
             case NEUPDU_TYPE_MSG:
-                nm = (neumsg_t *)fixarray_get(srv->ns_msgs, slot);
-                if(nm != NULL){
+                if(fixarray_get(&srv->ns_msgs, slot, (void**)&nm) != 0){
                     nm->dispatch(ses, pdu);
                 }else{
                     neusession_close(ses, NEUERROR_MSGERR);

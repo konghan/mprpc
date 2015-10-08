@@ -3,6 +3,8 @@
 
 #include "neuron.h"
 
+#include <event2/listener.h>
+
 #include <sys/types.h>
 #include <sys/uio.h>
 #include <unistd.h>
@@ -87,7 +89,8 @@ int neuworker_dispatch(neuworker_t *nw, neuhandle_t *nh){
 }
 
 static void neuservice_accept_cb(struct evconnlistener *evl, evutil_socket_t sock,
-            struct sockaddr *addr, int socklen len, void *data){
+                  struct sockaddr *addr, int socklen, void *data){
+
     neuservice_t *ns = (neuservice_t *)data;
     neusession_t *ses;
 
@@ -100,11 +103,11 @@ static void neuservice_accept_cb(struct evconnlistener *evl, evutil_socket_t soc
     if(ns->on_setup != NULL){
         ns->on_setup(ns, ses, ns->ns_data);
     }else{
-        neusession_free(ns);
+        neusession_free(ses);
     }
 }
 
-static void neuservice_shutdown_cb(struct evconnlistener evl*, void *data){
+static void neuservice_shutdown_cb(struct evconnlistener *evl, void *data){
     neuservice_t *ns = (neuservice_t *)data;
 
     if(ns->on_shutdown)
@@ -112,7 +115,7 @@ static void neuservice_shutdown_cb(struct evconnlistener evl*, void *data){
 }
 
 static void watch_service_cb(neuworker_t *nw, struct neuhandle *nh, void *data){
-    struct neuservice *ns = (sstruct neuservice *)data;
+    struct neuservice *ns = (struct neuservice *)data;
     
     ASSERT((nw != NULL) && (ns != NULL));
 
@@ -120,6 +123,7 @@ static void watch_service_cb(neuworker_t *nw, struct neuhandle *nh, void *data){
         ns, 0, -1, (struct sockaddr*)&ns->ns_addr, sizeof(ns->ns_addr));
 
     evconnlistener_set_error_cb(ns->ns_listen, neuservice_shutdown_cb);
+    ns->ns_worker = nw;
 }
 
 int neuworker_watch_service(neuworker_t *nw, struct neuservice *ns){
@@ -149,10 +153,10 @@ static void watch_session_cb(neuworker_t *nw, struct neuhandle *nh, void *data){
     if(ses->ev == NULL){
         ses->ns->on_close(ses->ns, ses, ses->data);
         neusession_free(ses);
-        return -1;
+        return ;
     }
 
-    return event_add(ses->ev, NULL);
+    event_add(ses->ev, NULL);
 }
 
 int neuworker_watch_session(neuworker_t *nw, struct neusession *ns){

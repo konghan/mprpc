@@ -16,6 +16,7 @@ extern "C" {
 struct neuservice;
 typedef struct neuservice neuservice_t;
 struct neumsg;
+struct neuworker;
 
 typedef void (*neuservice_on_setup_session)(neuservice_t *ns, neusession_t *ses, void *data);
 typedef void (*neuservice_on_close_session)(neuservice_t *ns, neusession_t *ses, void *data);
@@ -26,7 +27,7 @@ typedef struct neuservice{
     void *ns_data;
 
     // private
-
+    struct neuworker *ns_worker;
     struct sockaddr_in ns_addr;
 
     neuservice_on_setup_session  on_setup;
