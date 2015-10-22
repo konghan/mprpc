@@ -13,12 +13,21 @@ extern "C" {
 #endif
 
 struct neusrv;
+struct neuses;
+
 struct neurpc;
+struct neumsg;
+struct neumsq;
 
 int neusrv_init(struct neusrv *srv, void *data);
 int neusrv_fini(struct neusrv *srv);
 
-int neusrv_setsocket(struct neusrv *srv, int sock);
+//int neusrv_setsocket(struct neusrv *srv, int sock);
+
+struct neuses* neusrv_setup_ses(struct neusrv *srv, struct sockaddr *addr, int len);
+int neusrv_close_ses(struct neuses *ses);
+
+
 
 /** message
 
@@ -46,16 +55,24 @@ int send_example(struct neusrv *srv, struct example *ex, void *data, uint32_t *s
     return ret;
 } 
 */
-typedef void (*neusrv_rspcb)(void *data, uint32_t seq, struct neupdu *rsp);
+
+int neusrv_setup_msg(struct neusrv *srv, const char *msg, struct neumsgcli **mcli);
+int neusrv_close_msg(struct neumsgcli *mcli);
+
+typedef void (*neumsg_rspcb)(void *data, uint32_t seq, struct neupdu *rsp);
 // message name send()
-int neusrv_send_message(struct neusrv *srv, struct neupdu *req,
-                        neusrv_rspcb cb, void *data, uint32_t *seq);
+int neusrv_send_message(struct neumsgcli *mcli, struct neupdu *req,
+                        neumsg_rspcb cb, void *data, uint32_t *seq);
 
 /** message queue
 */
-typedef void (*neusrv_msqcb)(struct neusrv *srv, void *data, struct neupdu *msg);
-int neusrc_subscribe(struct neusrv *srv, const char *msq, neusrv_msqcb cb, void *data); 
-int neusrc_unsubscribe(struct neusrv *srv, const char *msq);
+
+int neusrv_setup_msq(struct neusrv *srv, const char *msq, struct meumsqcli *mcli);
+int neusrv_close_msq(struct neumsqcli *mcli);
+
+typedef void (*neumsq_cb)(struct neumsqcli *mcli, void *data, struct neupdu *msg);
+int neusrc_subscribe(struct neumsqcli *mcli, const char *msq, neumsq_cb cb, void *data); 
+int neusrc_unsubscribe(struct neumsqcli *mcli);
 
 
 /** RPC

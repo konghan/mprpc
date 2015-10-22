@@ -25,7 +25,7 @@ int main(){
     neumsg_t nm;
     struct sockaddr_in addr;
 
-    memset(&addr, sizeof(addr));
+    memset(&addr, 0, sizeof(addr));
     addr.sin_family = AF_INET;
     addr.sin_port = htons(1234);
     addr.sin_addr.s_addr = inet_addr("127.0.0.1");
