@@ -2,8 +2,9 @@
  * Copyright (c) 2013, Konghan. All rights reserved.
  * Distributed under the BSD license, see the LICENSE file.
  */
-#include "neulog.h"
+#include "logger.h"
 
+#include <pthread.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -20,6 +21,8 @@ typedef struct logger{
     int		    log_init;
     int		    log_sock;
 
+    pthread_mutex_t lock;
+
     struct sockaddr_in log_serv;
 }logger_t;
 
@@ -29,34 +32,34 @@ struct logger_ltos {
 };
 
 static struct logger_ltos __log_ltos[] = {
-    {NEULOG_UNKNOWN, "UNKNOWN"},
-    {NEULOG_DEFAULT, "DEFAULT"},
-    {NEULOG_TRACE,  "TRACE"},
-    {NEULOG_DEBUG,  "DEBUG"},
-    {NEULOG_INFO,   " INFO"},
-    {NEULOG_WARN,   " WORN"},
-    {NEULOG_ERROR,  "ERROR"},
-    {NEULOG_FATAL,  "FATAL"},
+    {LOGGER_UNKNOWN, "UNKNOWN"},
+    {LOGGER_DEFAULT, "DEFAULT"},
+    {LOGGER_TRACE,  "TRACE"},
+    {LOGGER_DEBUG,  "DEBUG"},
+    {LOGGER_INFO,   " INFO"},
+    {LOGGER_WARN,   " WORN"},
+    {LOGGER_ERROR,  "ERROR"},
+    {LOGGER_FATAL,  "FATAL"},
 };
 
 static logger_t	    __log_data = {};
-static int __log_level = NEULOG_INFO;
+static int __log_level = LOGGER_INFO;
 
-void neulog_set(int level){
+void logger_set(int level){
 	__log_level = level;
 }
 
 static char *log_ltos(int level){
-    if((level > NEULOG_FATAL)||(level < 0)){
-        return (__log_ltos[NEULOG_UNKNOWN]).ll_string;
+    if((level > LOGGER_FATAL)||(level < 0)){
+        return (__log_ltos[LOGGER_UNKNOWN]).ll_string;
     }
 
     return (__log_ltos[level]).ll_string;
 }
 
-int neulog_print(int level, char *fmt, ...){
+int logger_print(int level, char *fmt, ...){
     logger_t	*log = &__log_data;
-    char	buf[NEULOG_MAX_BUF];
+    char	buf[LOGGER_MAX_BUF];
     int		size = 0;
     va_list	args;
 
@@ -64,10 +67,10 @@ int neulog_print(int level, char *fmt, ...){
     	return 0;
     }
 
-    size = snprintf(buf, NEULOG_MAX_BUF, "%s:", log_ltos(level));
+    size = snprintf(buf, LOGGER_MAX_BUF, "%s:", log_ltos(level));
 
     va_start(args, fmt);
-    size += vsnprintf(buf+size, NEULOG_MAX_BUF-size-1, fmt, args);
+    size += vsnprintf(buf+size, LOGGER_MAX_BUF-size-1, fmt, args);
     va_end(args);
 
     if(!log->log_init){
@@ -84,7 +87,7 @@ int neulog_print(int level, char *fmt, ...){
     return 0;
 }
 
-int neulog_init(const char *file, const char *addr, short port, int flags){
+int logger_init(const char *file, const char *addr, short port, int flags){
     logger_t	*log = &__log_data;
 
     log->log_sock = socket(PF_INET, SOCK_STREAM, 0);
@@ -105,16 +108,19 @@ int neulog_init(const char *file, const char *addr, short port, int flags){
     	return -1;
     }
 
+    pthread_mutex_init(&log->lock, NULL);
+
     log->log_init = 1;
 
     return 0;
 }
 
-int neulog_fini(){
+int logger_fini(){
     logger_t	*log = &__log_data;
 
     if(log->log_init){
 	    log->log_init = 0;
+        pthread_mutex_destroy(&log->lock);
 	    close(log->log_sock);
     }
 

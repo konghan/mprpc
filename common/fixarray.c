@@ -4,7 +4,7 @@
  */
 
 #include "fixarray.h"
-#include "neuron.h"
+#include "osapi.h"
 
 #include <errno.h>
 #include <string.h>

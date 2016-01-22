@@ -12,33 +12,22 @@
 extern "C" {
 #endif
 
-typedef int (*neucli_on_connect)(neucli_t *cli, int status, int errcode);
-typedef int (*neucli_on_data)(neucli_t *cli);
+struct neusrv;
+struct neuses;
 
-// neucli_on_connect status
-enum {
-    NEUCLI_CONN_INIT = 0,
-    NEUCLI_CONN_CONNECTED,
-    NEUCLI_CONN_SYNCED,
-};
+struct neurpc;
+struct neumsg;
+struct neumsq;
 
-typedef struct neucli {
-    int efd;
+int neusrv_init(struct neusrv *srv, void *data);
+int neusrv_fini(struct neusrv *srv);
 
-    int state;
+//int neusrv_setsocket(struct neusrv *srv, int sock);
 
-    neucli_on_connect onconn;
-    neucli_on_data    ondata;
+struct neuses* neusrv_setup_ses(struct neusrv *srv, struct sockaddr *addr, int len);
+int neusrv_close_ses(struct neuses *ses);
 
-    neuevent_t nev;
-    fixmap_t   fmslots;
-}neucli_t;
 
-int neucli_init(neucli_t *cli, neucli_on_connect onconn, neucli_on_data ondata);
-int neucli_fini(neucli_t *cli);
-int neucli_connect(neucli_t *cli, struct sockaddr *addr, int len);
-int neucli_status(neucli_t *cli);
-int neucli_send(neucli_t *cli, neupdu_t *pdu);
 
 /** message
 
@@ -67,46 +56,31 @@ int send_example(struct neusrv *srv, struct example *ex, void *data, uint32_t *s
 } 
 */
 
-typedef void (*neucli_msg_rspcb)(void *data, uint32_t seq, neupdu_t *rsp);
+int neusrv_setup_msg(struct neusrv *srv, const char *msg, struct neumsgcli **mcli);
+int neusrv_close_msg(struct neumsgcli *mcli);
 
-typedef struct neucli_msg_reqrsp{
-    fixmap_node_t  node;
-
-    neucli_msg_rspcb  cb;
-    void *data;
-    uint32_t seq;
-}neucli_msg_reqrsp_t;
-
-typedef struct neucli_msg{
-    neucli_t *cli;
-
-    fixmap_t fmmsgs;
-}neucli_msg_t;
-
-int neucli_msg_setup(neucli_t *cli, const char *msg, struct neucli_msg **mcli);
-int neucli_msg_close(struct neucli_msg *mcli);
-
+typedef void (*neumsg_rspcb)(void *data, uint32_t seq, struct neupdu *rsp);
 // message name send()
-int neucli_msg_send(struct neucli_msg *mcli, struct neupdu *req,
-                        neucli_msg_rspcb cb, void *data, uint32_t *seq);
+int neusrv_send_message(struct neumsgcli *mcli, struct neupdu *req,
+                        neumsg_rspcb cb, void *data, uint32_t *seq);
 
 /** message queue
 */
-/*
+
 int neusrv_setup_msq(struct neusrv *srv, const char *msq, struct meumsqcli *mcli);
 int neusrv_close_msq(struct neumsqcli *mcli);
 
 typedef void (*neumsq_cb)(struct neumsqcli *mcli, void *data, struct neupdu *msg);
 int neusrc_subscribe(struct neumsqcli *mcli, const char *msq, neumsq_cb cb, void *data); 
 int neusrc_unsubscribe(struct neumsqcli *mcli);
-*/
+
 
 /** RPC
 */
-/*
+
 int neusrv_setup_rpc(struct neusrv *srv, const char *service, struct neurpc **rpc);
 int neusrv_close_rpc(struct neurpc *rpc);
-*/
+
 /*
 // sync mode
 struct outs* neurpc_example(struct neurpc *rpc, struct example *e, struct sample *s){
@@ -158,12 +132,12 @@ uint32_t neurpc_example(struct neurpc *rpc, struct example *e, struct sample *s,
 }
 
 */
-/*
+
 typedef void (*neurpc_cb)(struct neurpc *rpc, unint32_t seq, void *data, struct neupdu *rsp);
 int neurpc_call(struct neurpc *rpc, int func, struct neupdu *req, struct neupdu **rsp);
 uint32_t neurpc_call_async(struct neurpc *rpc, int func, struct neupdu *req, 
             neurpc_cb cb, void *data);
-*/
+
 #ifdef __cpluscplus
 }
 #endif
